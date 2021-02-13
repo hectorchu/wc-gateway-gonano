@@ -19,7 +19,7 @@
  * Domain Path: /languages
  */
 
-defined('ABSPATH') or exit;
+defined('ABSPATH') || exit;
 
 // Make sure WooCommerce is active
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
@@ -65,7 +65,7 @@ function wc_gateway_gonano_init() {
         }
 
         public function init_form_fields() {
-            $this->form_fields = apply_filters('wc_gonano_form_fields', array(
+            $this->form_fields = array(
                 'enabled' => array(
                     'title'       => __('Enable/Disable', 'wc-gateway-gonano'),
                     'type'        => 'checkbox',
@@ -86,6 +86,13 @@ function wc_gateway_gonano_init() {
                     'default'     => __('Pay via Gonano.', 'wc-gateway-gonano'),
                     'desc_tip'    => true,
                 ),
+                'api_url' => array(
+                    'title'       => __('API URL', 'wc-gateway-gonano'),
+                    'type'        => 'text',
+                    'description' => __('The payment server API base URL.', 'wc-gateway-gonano'),
+                    'default'     => __('https://gonano.dev', 'wc-gateway-gonano'),
+                    'desc_tip'    => true,
+                ),
                 'account' => array(
                     'title'       => __('NANO Account', 'wc-gateway-gonano'),
                     'type'        => 'text',
@@ -93,7 +100,7 @@ function wc_gateway_gonano_init() {
                     'default'     => __('', 'wc-gateway-gonano'),
                     'desc_tip'    => true,
                 ),
-            ));
+            );
         }
 
         private function post_data($url, $body) {
@@ -119,11 +126,12 @@ function wc_gateway_gonano_init() {
         public function process_payment($order_id) {
             $order = wc_get_order($order_id);
 
-            $title = $this->settings['title'];
+            $title = urlencode($this->settings['title']);
+            $api_url = $this->settings['api_url'];
             $account = $this->settings['account'];
             $amount = $order->get_total();
 
-            list($result, $err) = $this->post_data('https://gonano.dev/payment/new',
+            list($result, $err) = $this->post_data("$api_url/payment/new",
                                   array('account' => $account, 'amount' => $amount));
             if ($err) {
                 $order->update_status('failed', $err);
@@ -137,7 +145,9 @@ function wc_gateway_gonano_init() {
 
             return array(
                 'result'   => 'success',
-                'redirect' => "https://gonano.dev/checkout/?title=$title&account=$result->account&amount=$amount&payment_id=$result->id&on_success=$callback&on_error=$callback"
+                'redirect' => "$api_url/checkout/?api_url=" . urlencode($api_url) .
+                              "&title=$title&account=$result->account&amount=$amount" .
+                              "&payment_id=$result->id&on_success=$callback&on_error=$callback"
             );
         }
 
@@ -156,7 +166,7 @@ function wc_gateway_gonano_init() {
             if ($payment_id != $order->get_meta('_gonano_payment_id')) {
                 $err = 'Payment ID mismatch';
             } else {
-                list($result, $err) = $this->post_data('https://gonano.dev/payment/status', array('id' => $payment_id));
+                list($result, $err) = $this->post_data("$api_url/payment/status", array('id' => $payment_id));
                 if (!$err && !$result->block_hash) {
                     $err = 'Payment not fulfilled';
                 }
@@ -164,11 +174,9 @@ function wc_gateway_gonano_init() {
 
             if ($err) {
                 $order->update_status('failed', $err);
-                return wp_redirect($this->get_return_url($order));
+            } else {
+                $order->payment_complete();
             }
-
-            $order->payment_complete();
-
             wp_redirect($this->get_return_url($order));
         }
     }
