@@ -26,21 +26,20 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
     return;
 }
 
-function wc_gonano_add_to_gateways($gateways) {
+add_filter('woocommerce_payment_gateways', function($gateways) {
     $gateways[] = 'WC_Gateway_Gonano';
     return $gateways;
-}
+});
 
-add_filter('woocommerce_payment_gateways', 'wc_gonano_add_to_gateways');
-
-function wc_gateway_gonano_plugin_links($links) {
-    $plugin_links = array(
-        '<a href="' . admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_gateway_gonano') . '">' . __('Configure', 'wc-gateway-gonano') . '</a>'
-    );
-    return array_merge($plugin_links, $links);
-}
-
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'wc_gateway_gonano_plugin_links');
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), function($links) {
+    $url = add_query_arg(array(
+        'page'    => 'wc-settings',
+        'tab'     => 'checkout',
+        'section' => 'wc_gateway_gonano',
+    ), admin_url('admin.php'));
+    $text = __('Configure', 'wc-gateway-gonano');
+    return array_merge(array("<a href=\"$url\">$text</a>"), $links);
+});
 
 add_action('plugins_loaded', 'wc_gateway_gonano_init');
 
@@ -57,11 +56,13 @@ function wc_gateway_gonano_init() {
             $this->init_form_fields();
             $this->init_settings();
 
-            $this->title        = $this->get_option('title');
-            $this->description  = $this->get_option('description');
+            $this->title       = $this->get_option('title');
+            $this->description = $this->get_option('description');
+            $this->api_url     = $this->get_option('api_url', 'https://gonano.dev');
+            $this->account     = $this->get_option('account', '');
 
             add_action("woocommerce_update_options_payment_gateways_$this->id", array($this, 'process_admin_options'));
-            add_action('woocommerce_api_wc_gateway_gonano', array($this, 'payment_callback'));
+            add_action('woocommerce_api_' . strtolower($this->id), array($this, 'payment_callback'));
         }
 
         public function init_form_fields() {
@@ -90,14 +91,14 @@ function wc_gateway_gonano_init() {
                     'title'       => __('API URL', 'wc-gateway-gonano'),
                     'type'        => 'text',
                     'description' => __('The payment server API base URL.', 'wc-gateway-gonano'),
-                    'default'     => __('https://gonano.dev', 'wc-gateway-gonano'),
+                    'default'     => 'https://gonano.dev',
                     'desc_tip'    => true,
                 ),
                 'account' => array(
                     'title'       => __('NANO Account', 'wc-gateway-gonano'),
                     'type'        => 'text',
                     'description' => __('Account for receiving any sent NANO', 'wc-gateway-gonano'),
-                    'default'     => __('', 'wc-gateway-gonano'),
+                    'default'     => '',
                     'desc_tip'    => true,
                 ),
             );
@@ -125,14 +126,10 @@ function wc_gateway_gonano_init() {
 
         public function process_payment($order_id) {
             $order = wc_get_order($order_id);
-
-            $title = urlencode($this->settings['title']);
-            $api_url = $this->settings['api_url'];
-            $account = $this->settings['account'];
             $amount = $order->get_total();
 
-            list($result, $err) = $this->post_data("$api_url/payment/new",
-                                  array('account' => $account, 'amount' => $amount));
+            list($result, $err) = $this->post_data("$this->api_url/payment/new",
+                                  array('account' => $this->account, 'amount' => $amount));
             if ($err) {
                 $order->update_status('failed', $err);
                 return array('result' => 'failure');
@@ -141,38 +138,36 @@ function wc_gateway_gonano_init() {
             $order->update_meta_data('_gonano_payment_id', $result->id);
             $order->save_meta_data();
 
-            $callback = urlencode(home_url("/wc-api/WC_Gateway_Gonano/?order_id=$order_id"));
+            $callback = add_query_arg('key', $order->get_order_key(), home_url("wc-api/$this->id"));
 
             return array(
                 'result'   => 'success',
-                'redirect' => "$api_url/checkout/?api_url=" . urlencode($api_url) .
-                              "&title=$title&account=$result->account&amount=$amount" .
-                              "&payment_id=$result->id&on_success=$callback&on_error=$callback"
+                'redirect' => add_query_arg(array(
+                    'api_url'    => urlencode($this->api_url),
+                    'title'      => urlencode($this->title),
+                    'account'    => $result->account,
+                    'amount'     => $amount,
+                    'payment_id' => $result->id,
+                    'on_success' => urlencode($callback),
+                    'on_error'   => urlencode($callback),
+                ), "$this->api_url/checkout/")
             );
         }
 
         public function payment_callback() {
-            $order_id = $_GET['order_id'];
-            $payment_id = $_GET['payment_id'];
+            $order = wc_get_order(wc_get_order_id_by_order_key($_GET['key']));
+            $payment_id = $order->get_meta('_gonano_payment_id');
+
             $err = $_GET['err'];
-
-            $order = wc_get_order($order_id);
-
-            if ($err) {
-                $order->update_status('failed', $err);
-                return wp_redirect($this->get_return_url($order));
-            }
-
-            if ($payment_id != $order->get_meta('_gonano_payment_id')) {
-                $err = 'Payment ID mismatch';
-            } else {
-                list($result, $err) = $this->post_data("$api_url/payment/status", array('id' => $payment_id));
+            if (!$err) {
+                list($result, $err) = $this->post_data("$this->api_url/payment/status", array('id' => $payment_id));
                 if (!$err && !$result->block_hash) {
                     $err = 'Payment not fulfilled';
                 }
             }
 
             if ($err) {
+                $this->post_data("$this->api_url/payment/cancel", array('id' => $payment_id));
                 $order->update_status('failed', $err);
             } else {
                 $order->payment_complete();
@@ -182,16 +177,12 @@ function wc_gateway_gonano_init() {
     }
 }
 
-add_filter('woocommerce_currencies', 'wc_add_currency_nano');
-
-function wc_add_currency_nano($currencies) {
-    $currencies['NANO'] = __('NANO', 'woocommerce');
+add_filter('woocommerce_currencies', function($currencies) {
+    $currencies['NANO'] = 'NANO';
     return $currencies;
-}
+});
 
-add_filter('woocommerce_currency_symbol', 'wc_add_currency_symbol_nano', 10, 2);
-
-function wc_add_currency_symbol_nano($currency_symbol, $currency) {
-    if ($currency == 'NANO') return 'NANO';
+add_filter('woocommerce_currency_symbol', function($currency_symbol, $currency) {
+    if ($currency == 'NANO') return 'NANO ';
     return $currency_symbol;
-}
+}, 10, 2);
