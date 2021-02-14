@@ -106,6 +106,24 @@ function wc_gateway_gonano_init() {
             );
         }
 
+        private function get_data($url) {
+            $resp = wp_remote_get($url);
+            $body = '';
+            $err = '';
+
+            if (is_wp_error($resp)) {
+                $err = "Error making request to $url: " . $resp->get_error_message();
+            } else {
+                $resp_code = wp_remote_retrieve_response_code($resp);
+                $body = wp_remote_retrieve_body($resp);
+
+                if ($resp_code != 200) {
+                    $err = "Error making request to $url: $body";
+                }
+            }
+            return array($body, $err);
+        }
+
         private function post_data($url, $body) {
             $resp = wp_remote_post($url, array('body' => wp_json_encode($body)));
             $err = '';
@@ -128,8 +146,18 @@ function wc_gateway_gonano_init() {
         public function process_payment($order_id) {
             $order = wc_get_order($order_id);
             $amount = $order->get_total();
+            $currency = get_woocommerce_currency();
 
             $this->cancel_payment($order_id);
+
+            if ($currency != 'NANO') {
+                list($result, $err) = $this->get_data("https://nano.rate.sx/$amount$currency");
+                if ($err) {
+                    $order->update_status('failed', $err);
+                    return array('result' => 'failure');
+                }
+                $amount = chop($result);
+            }
 
             list($result, $err) = $this->post_data("$this->api_url/payment/new",
                                   array('account' => $this->account, 'amount' => $amount));
