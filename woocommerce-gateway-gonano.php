@@ -63,6 +63,8 @@ function wc_gateway_gonano_init() {
 
             add_action("woocommerce_update_options_payment_gateways_$this->id", array($this, 'process_admin_options'));
             add_action('woocommerce_api_' . strtolower($this->id), array($this, 'payment_callback'));
+            add_action('woocommerce_order_status_failed', array($this, 'cancel_payment'));
+            add_action('woocommerce_order_status_cancelled', array($this, 'cancel_payment'));
         }
 
         public function init_form_fields() {
@@ -105,7 +107,6 @@ function wc_gateway_gonano_init() {
         }
 
         private function post_data($url, $body) {
-            $url = esc_url_raw($url);
             $resp = wp_remote_post($url, array('body' => wp_json_encode($body)));
             $err = '';
 
@@ -127,6 +128,8 @@ function wc_gateway_gonano_init() {
         public function process_payment($order_id) {
             $order = wc_get_order($order_id);
             $amount = $order->get_total();
+
+            $this->cancel_payment($order_id);
 
             list($result, $err) = $this->post_data("$this->api_url/payment/new",
                                   array('account' => $this->account, 'amount' => $amount));
@@ -167,12 +170,20 @@ function wc_gateway_gonano_init() {
             }
 
             if ($err) {
-                $this->post_data("$this->api_url/payment/cancel", array('id' => $payment_id));
                 $order->update_status('failed', $err);
             } else {
                 $order->payment_complete();
             }
             wp_redirect($this->get_return_url($order));
+        }
+
+        public function cancel_payment($order_id) {
+            $order = wc_get_order($order_id);
+            $payment_id = $order->get_meta('_gonano_payment_id');
+
+            if (isset($payment_id)) {
+                $this->post_data("$this->api_url/payment/cancel", array('id' => $payment_id));
+            }
         }
     }
 }
