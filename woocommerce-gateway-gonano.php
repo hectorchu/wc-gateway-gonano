@@ -10,13 +10,15 @@
  * @wordpress-plugin
  * Plugin Name: Gonano Payment Gateway
  * Plugin URI:  https://gonano.dev
- * Description: Accept payments in NANO via Gonano Payments
  * Version:     0.1.0
+ * Description: Accept payments in NANO via Gonano Payments
  * Author:      Hector Chu
  * Author URI:  https://github.com/hectorchu
  * License:     MIT
- * Text Domain: gonano-payment-gateway
+ * Text Domain: wc-gateway-gonano
  * Domain Path: /languages
+ * Requires at least: 4.9
+ * Requires PHP: 7.4
  */
 
 defined('ABSPATH') || exit;
