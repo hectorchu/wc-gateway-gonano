@@ -5,7 +5,7 @@
  * @package   Gonano-Payment-Gateway
  * @author    Hector Chu
  * @copyright 2021 Hector Chu
- * @license   MIT
+ * @license   GPL-3.0-or-later
  *
  * @wordpress-plugin
  * Plugin Name: Gonano Payment Gateway
@@ -14,7 +14,8 @@
  * Description: Accept payments in NANO via Gonano Payments
  * Author:      Hector Chu
  * Author URI:  https://github.com/hectorchu
- * License:     MIT
+ * License:     GPL v3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: wc-gateway-gonano
  * Domain Path: /languages
  * Requires at least: 4.9
