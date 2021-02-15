@@ -4,7 +4,7 @@ Donate link: nano:nano_3gonano8jnse4zm65jaiki9tk8ry4jtgc1smarinukho6fmbc45k3icsh
 Tags: woocommerce, cryptocurrency, crypto, checkout, payments, gateway, nano, nanocurrency
 Requires at least: 4.9
 Tested up to: 5.6
-Stable tag: 0.1.0
+Stable tag: 0.1.1
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html

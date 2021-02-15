@@ -10,7 +10,7 @@
  * @wordpress-plugin
  * Plugin Name: Gonano Payment Gateway
  * Plugin URI:  https://gonano.dev
- * Version:     0.1.0
+ * Version:     0.1.1
  * Description: Accept payments in NANO via Gonano Payments
  * Author:      Hector Chu
  * Author URI:  https://github.com/hectorchu
@@ -154,12 +154,16 @@ function wc_gateway_gonano_init() {
             $this->cancel_payment($order_id);
 
             if ($currency != 'NANO') {
-                list($result, $err) = $this->get_data("https://nano.rate.sx/$amount$currency");
+                list($result, $err) = $this->get_data(add_query_arg(array(
+                    'amount'   => $amount,
+                    'currency' => $currency,
+                ), "$this->api_url/rates/"));
+
                 if ($err) {
                     $order->update_status('failed', $err);
                     return array('result' => 'failure');
                 }
-                $amount = chop($result);
+                $amount = (string)round(floatval($result), 6);
             }
 
             list($result, $err) = $this->post_data("$this->api_url/payment/new",
