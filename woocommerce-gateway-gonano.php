@@ -56,6 +56,8 @@ function wc_gateway_gonano_init() {
             $this->method_description = __('Accept cryptocurrency payments in NANO.', 'wc-gateway-gonano');
             $this->order_button_text  = __('Pay with NANO', 'wc-gateway-gonano');
 
+            $this->icon = apply_filters('woocommerce_gateway_icon', plugin_dir_url(__FILE__) . 'assets/icon.png');
+
             $this->init_form_fields();
             $this->init_settings();
 
