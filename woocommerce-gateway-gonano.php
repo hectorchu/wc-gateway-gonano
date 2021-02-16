@@ -1,14 +1,14 @@
 <?php
 /**
- * Gonano Payment Gateway
+ * Payment Gateway for Gonano on WooCommerce
  *
- * @package   Gonano-Payment-Gateway
+ * @package   WC-Gateway-Gonano
  * @author    Hector Chu
  * @copyright 2021 Hector Chu
  * @license   GPL-3.0-or-later
  *
  * @wordpress-plugin
- * Plugin Name: Gonano Payment Gateway
+ * Plugin Name: Payment Gateway for Gonano on WooCommerce
  * Plugin URI:  https://gonano.dev
  * Version:     0.1.1
  * Description: Accept payments in NANO via Gonano Payments
@@ -44,9 +44,7 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), function($links) 
     return array_merge(array("<a href=\"$url\">$text</a>"), $links);
 });
 
-add_action('plugins_loaded', 'wc_gateway_gonano_init');
-
-function wc_gateway_gonano_init() {
+add_action('plugins_loaded', function() {
     class WC_Gateway_Gonano extends WC_Payment_Gateway {
 
         public function __construct() {
@@ -223,7 +221,7 @@ function wc_gateway_gonano_init() {
             }
         }
     }
-}
+});
 
 add_filter('woocommerce_currencies', function($currencies) {
     $currencies['NANO'] = 'NANO';

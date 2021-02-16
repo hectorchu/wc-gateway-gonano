@@ -1,4 +1,4 @@
-=== Gonano Payment Gateway ===
+=== Payment Gateway for Gonano on WooCommerce ===
 Contributors: hectorchu
 Donate link: nano:nano_3gonano8jnse4zm65jaiki9tk8ry4jtgc1smarinukho6fmbc45k3icsh6en
 Tags: woocommerce, cryptocurrency, crypto, checkout, payments, gateway, nano, nanocurrency
