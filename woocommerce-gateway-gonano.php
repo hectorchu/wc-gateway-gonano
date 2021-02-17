@@ -193,10 +193,12 @@ add_action('plugins_loaded', function() {
         }
 
         public function payment_callback() {
-            $order = wc_get_order(wc_get_order_id_by_order_key($_GET['key']));
+            $order_id = wc_get_order_id_by_order_key(sanitize_key($_GET['key']));
+            if (!$order_id) return;
+            $order = wc_get_order($order_id);
             $payment_id = $order->get_meta('_gonano_payment_id');
 
-            $err = $_GET['err'];
+            $err = sanitize_text_field($_GET['err']);
             if (!$err) {
                 list($result, $err) = $this->post_data("$this->api_url/payment/status", array('id' => $payment_id));
                 if (!$err && !$result->block_hash) {
