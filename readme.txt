@@ -13,12 +13,8 @@ Accept payments in NANO via Gonano Payments.
 
 == Description ==
 
-Gonano Payments is an easy-to-use payment processor for NANO that is free to use
-by the community.
+Gonano Payments is an easy-to-use payment processor for NANO that is free to use by the community.
 
-This lets you easily accept payments on your website without needing to know the
-details of how NANO works or needing to setup a NANO node, manage wallet keys or
-how to use the RPCs.
+This lets you easily accept payments on your website without needing to know the details of how NANO works or needing to setup a NANO node, manage wallet keys or how to use the RPCs.
 
-Intermediate wallet addresses are set-up automatically for your customers to pay
-into, and the proceeds are automatically forwarded to your destination account.
+Intermediate wallet addresses are set-up automatically for your customers to pay into, and the proceeds are automatically forwarded to your destination account.
