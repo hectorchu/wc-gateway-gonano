@@ -10,7 +10,7 @@
  * @wordpress-plugin
  * Plugin Name: Payment Gateway for Gonano on WooCommerce
  * Plugin URI:  https://gonano.dev
- * Version:     0.1.1
+ * Version:     0.1.2
  * Description: Accept payments in NANO via Gonano Payments
  * Author:      Hector Chu
  * Author URI:  https://github.com/hectorchu
