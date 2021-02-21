@@ -4,7 +4,7 @@ Donate link: nano:nano_3gonano8jnse4zm65jaiki9tk8ry4jtgc1smarinukho6fmbc45k3icsh
 Tags: woocommerce, cryptocurrency, crypto, checkout, payments, gateway, nano, nanocurrency
 Requires at least: 4.9
 Tested up to: 5.6
-Stable tag: 0.1.3
+Stable tag: 0.1.4
 Requires PHP: 7.4
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -20,6 +20,9 @@ This lets you easily accept payments on your website without needing to know the
 Intermediate wallet addresses are set-up automatically for your customers to pay into, and the proceeds are automatically forwarded to your destination account.
 
 == Changelog ==
+
+= 0.1.4 =
+* Link transaction id to block explorer.
 
 = 0.1.3 =
 * Set transaction id to block hash.

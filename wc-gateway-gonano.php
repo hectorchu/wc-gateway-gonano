@@ -10,7 +10,7 @@
  * @wordpress-plugin
  * Plugin Name: Payment Gateway for Gonano on WooCommerce
  * Plugin URI:  https://gonano.dev
- * Version:     0.1.3
+ * Version:     0.1.4
  * Description: Accept payments in NANO via Gonano Payments
  * Author:      Hector Chu
  * Author URI:  https://github.com/hectorchu
@@ -48,11 +48,12 @@ add_action('plugins_loaded', function() {
     class WC_Gateway_Gonano extends WC_Payment_Gateway {
 
         public function __construct() {
-            $this->id                 = 'WC_Gateway_Gonano';
-            $this->has_fields         = false;
-            $this->method_title       = __('Gonano Payments', 'wc-gateway-gonano');
-            $this->method_description = __('Accept cryptocurrency payments in NANO.', 'wc-gateway-gonano');
-            $this->order_button_text  = __('Pay with NANO', 'wc-gateway-gonano');
+            $this->id                   = 'WC_Gateway_Gonano';
+            $this->has_fields           = false;
+            $this->method_title         = __('Gonano Payments', 'wc-gateway-gonano');
+            $this->method_description   = __('Accept cryptocurrency payments in NANO.', 'wc-gateway-gonano');
+            $this->order_button_text    = __('Pay with NANO', 'wc-gateway-gonano');
+            $this->view_transaction_url = 'https://nanolooker.com/block/%s';
 
             $this->icon = apply_filters('woocommerce_gateway_icon', plugin_dir_url(__FILE__) . 'assets/icon.png');
 
