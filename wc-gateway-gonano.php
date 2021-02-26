@@ -10,7 +10,7 @@
  * @wordpress-plugin
  * Plugin Name: Payment Gateway for Gonano on WooCommerce
  * Plugin URI:  https://gonano.dev
- * Version:     0.1.4
+ * Version:     0.1.5
  * Description: Accept payments in NANO via Gonano Payments
  * Author:      Hector Chu
  * Author URI:  https://github.com/hectorchu
@@ -64,6 +64,7 @@ add_action('plugins_loaded', function() {
             $this->description = $this->get_option('description');
             $this->api_url     = $this->get_option('api_url', 'https://gonano.dev');
             $this->account     = $this->get_option('account', '');
+            $this->multiplier  = $this->get_option('multiplier', '1.00');
 
             add_action("woocommerce_update_options_payment_gateways_$this->id", array($this, 'process_admin_options'));
             add_action('woocommerce_api_' . strtolower($this->id), array($this, 'payment_callback'));
@@ -105,6 +106,13 @@ add_action('plugins_loaded', function() {
                     'type'        => 'text',
                     'description' => __('Account for receiving any sent NANO', 'wc-gateway-gonano'),
                     'default'     => '',
+                    'desc_tip'    => true,
+                ),
+                'multiplier' => array(
+                    'title'       => __('Price Multiplier', 'wc-gateway-gonano'),
+                    'type'        => 'text',
+                    'description' => __('Apply a discount/markup at checkout', 'wc-gateway-gonano'),
+                    'default'     => '1.00',
                     'desc_tip'    => true,
                 ),
             );
@@ -164,8 +172,9 @@ add_action('plugins_loaded', function() {
                     $order->update_status('failed', $err);
                     return array('result' => 'failure');
                 }
-                $amount = (string)round(floatval($result), 6);
+                $amount = (string)round($result, 6);
             }
+            $amount = (string)round($amount * $this->multiplier, 6);
 
             list($result, $err) = $this->post_data("$this->api_url/payment/new",
                                   array('account' => $this->account, 'amount' => $amount));
