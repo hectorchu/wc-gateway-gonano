@@ -19,6 +19,11 @@ This lets you easily accept payments on your website without needing to know the
 
 Intermediate wallet addresses are set-up automatically for your customers to pay into, and the proceeds are automatically forwarded to your destination account.
 
+== Screenshots ==
+
+1. At checkout
+2. Checkout page
+
 == Changelog ==
 
 = 0.1.7 =
